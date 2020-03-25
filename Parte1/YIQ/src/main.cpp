@@ -24,7 +24,8 @@
 using namespace std;
 using namespace cv;
 
-void convertToYIQ(const Mat &original, Mat &converted);
+void RGBToYIQ(const Mat &original, Mat &converted);
+void YIQToRGB(const Mat &original, Mat &converted);
 
 int main(int argc, char *argv[]) {
   /* First, open camera device */
@@ -35,6 +36,7 @@ int main(int argc, char *argv[]) {
    */
   Mat currentImage;
   Mat YIQ;
+  Mat reverted;
 
   /* Clean the terminal */
   cout << "\033[2J\033[1;1H";
@@ -46,7 +48,8 @@ int main(int argc, char *argv[]) {
       cout << "ERROR: Camera returned blank image, check connection\n";
       break;
     }
-    convertToYIQ(currentImage, YIQ);
+    RGBToYIQ(currentImage, YIQ);
+
     /* Show images */
     imshow("Original", currentImage);
     imshow("YIQ", YIQ);
@@ -58,7 +61,8 @@ int main(int argc, char *argv[]) {
     }
   }
 }
-void convertToYIQ(const Mat &original, Mat &converted) {
+
+void RGBToYIQ(const Mat &original, Mat &converted) {
   	if (converted.empty()) {
 		  converted = Mat(original.rows, original.cols, original.type());
     }
@@ -78,6 +82,30 @@ void convertToYIQ(const Mat &original, Mat &converted) {
       converted.at<Vec3b>(row,col)[2] = y;
       converted.at<Vec3b>(row,col)[1] = i + 128;
       converted.at<Vec3b>(row,col)[0] = q + 128;
+    }
+  }
+}
+
+void YIQToRGB(const Mat &original, Mat &converted) {
+  	if (converted.empty()) {
+		  converted = Mat(original.rows, original.cols, original.type());
+    }
+
+  double y, i, q;
+  uchar r, g, b;
+
+
+  for(int row = 0; row < original.rows; row++) {
+    for (int col = 0; col < original.cols; col++) {
+      q = original.at<Vec3b>(row,col)[0] - 128;
+      i = original.at<Vec3b>(row,col)[1] - 128;
+      y = original.at<Vec3b>(row,col)[2];
+      r = 1*y + 0.956*i + 0.621*q;
+			g = 1*y - 0.272*i - 0.647*q;
+			b = 1*y - 1.107*i + 1.705*q;
+      converted.at<Vec3b>(row,col)[2] = r;
+      converted.at<Vec3b>(row,col)[1] = g;
+      converted.at<Vec3b>(row,col)[0] = b;
     }
   }
 }
